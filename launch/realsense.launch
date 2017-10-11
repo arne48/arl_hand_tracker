@@ -1,0 +1,25 @@
+<launch>
+  <node pkg="arl_hand_tracker" type="arl_marker_tracker_node" name="arl_marker_tracker_node" output="screen">
+    <param name="fisheye_width"            type="int"  value="640" />
+    <param name="fisheye_height"           type="int"  value="480" />
+    <param name="enable_fisheye"           type="bool" value="true" />
+    <param name="depth_width"              type="int"  value="628" />
+    <param name="depth_height"             type="int"  value="468" />
+    <param name="enable_depth"             type="bool" value="true" />
+    <param name="color_width"              type="int"  value="640" />
+    <param name="color_height"             type="int"  value="480" />
+    <param name="enable_color"             type="bool" value="true" />
+    <param name="fisheye_fps"              type="int"  value="60" />
+    <param name="depth_fps"                type="int"  value="60" />
+    <param name="color_fps"                type="int"  value="60" />
+    <param name="publish_undistorted_color" type="bool" value="true" />
+    <param name="depth_optical_frame_id"   type="str"  value="camera_depth_optical_frame" />
+    <param name="color_optical_frame_id"   type="str"  value="camera_rgb_optical_frame" />
+    <param name="ir_optical_frame_id"      type="str"  value="camera_ir_optical_frame" />
+    <param name="ir2_optical_frame_id"     type="str"  value="camera_ir2_optical_frame" />
+    <param name="fisheye_optical_frame_id" type="str"  value="camera_fisheye_optical_frame" />
+    <param name="accel_optical_frame_id"   type="str"  value="camera_accel_optical_frame" />
+    <param name="gyro_optical_frame_id"    type="str"  value="camera_gyro_optical_frame" />
+  </node>
+  <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /arl_marker_tracker_node $(find arl_hand_tracker)/configs/marker_params.yaml" />
+</launch>
