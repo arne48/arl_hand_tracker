@@ -38,6 +38,7 @@ intialize_time_base_(false)
   publishStaticTransforms();
 
   tracker = new MarkerTracker(device_, node_handle);
+  cameraStarted_ = true;
 }
 
 RealsenseZR300::~RealsenseZR300()

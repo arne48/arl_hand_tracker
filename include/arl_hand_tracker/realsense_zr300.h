@@ -35,6 +35,8 @@ public:
   RealsenseZR300();
   ~RealsenseZR300();
 
+  bool cameraStarted_;
+
   void getParameters();
   bool setupDevice();
   void setupPublishers();
@@ -53,7 +55,6 @@ public:
 
 private:
   ros::NodeHandle node_handle, pnh_;
-  bool cameraStarted_;
   std::unique_ptr< rs::context > ctx_;
   rs::device *device_;
 

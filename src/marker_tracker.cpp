@@ -18,7 +18,9 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
                             255, 0, 255, 0, 255, 0};
 
   image_pub_ = it_.advertise("/arl_marker_tracker/debug/filtered_image", 1);
-  marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/marker_cloud", 1);
+  red_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/red_marker_cloud", 1);
+  blue_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/blue_marker_cloud", 1);
+  marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 };
 
 MarkerTracker::~MarkerTracker()
@@ -44,21 +46,147 @@ uchar MarkerTracker::getFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::i
   return tex.at<uchar>(pixel_y, pixel_x);
 }
 
-cv::Vec3b MarkerTracker::rgbFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics)
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr MarkerTracker::getBiggestCluster(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
 {
-  auto pixel_x = (int)(coord.x * tex_intrinsics.width);
-  if (pixel_x < 0) pixel_x = 0;
-  if (pixel_x >= tex_intrinsics.width) pixel_x = tex_intrinsics.width - 1;
+  pcl::VoxelGrid<pcl::PointXYZRGB> vg;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZRGB>);
+  vg.setInputCloud (cloud);
+  vg.setLeafSize (0.01f, 0.01f, 0.01f);
+  vg.filter (*cloud_filtered);
 
-  auto pixel_y = (int)(coord.y * tex_intrinsics.height);
-  if (pixel_y < 0) pixel_y = 0;
-  if (pixel_y >= tex_intrinsics.height) pixel_y = tex_intrinsics.height -1;
 
-  return tex.at<cv::Vec3b>(pixel_y, pixel_x);
+
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  tree->setInputCloud (cloud);
+
+  std::vector<pcl::PointIndices> cluster_indices;
+  pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+  ec.setClusterTolerance (0.02); // 2cm
+  ec.setMinClusterSize (100);
+  ec.setMaxClusterSize (25000);
+  ec.setSearchMethod (tree);
+  ec.setInputCloud (cloud_filtered);
+  ec.extract (cluster_indices);
+
+
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr biggest_cluster_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+  size_t biggest_cluster = 0;
+  if (cluster_indices.size() > 1)
+  {
+    for (size_t i = 1; i < cluster_indices.size(); i++)
+    {
+      if (cluster_indices.at(biggest_cluster).indices.size() < cluster_indices.at(i).indices.size())
+      {
+        biggest_cluster = i;
+      }
+    }
+  }
+  else if (cluster_indices.size() == 1)
+  {
+    biggest_cluster = 0;
+  }
+
+  if (cluster_indices.size() > 0)
+  {
+    for (std::vector<int>::const_iterator pit = cluster_indices.at(biggest_cluster).indices.begin();
+         pit != cluster_indices.at(biggest_cluster).indices.end ();
+         ++pit)
+    {
+      biggest_cluster_cloud->points.push_back (cloud_filtered->points[*pit]);
+    }
+    biggest_cluster_cloud->width = biggest_cluster_cloud->points.size ();
+    biggest_cluster_cloud->height = 1;
+    biggest_cluster_cloud->is_dense = true;
+  }
+
+  return biggest_cluster_cloud;
+}
+
+struct MarkerTracker::marker_pose_t MarkerTracker::getMarkerPose(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
+{
+
+  // Avg Normal Marker
+  pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
+  ne.setInputCloud(cloud);
+  ne.setRadiusSearch (0.03);
+
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
+  ne.setSearchMethod(tree);
+
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+  ne.compute (*cloud_normals);
+
+
+  visualization_msgs::Marker line_list;
+  line_list.header.stamp = ros::Time::now();
+  line_list.action = visualization_msgs::Marker::ADD;
+  line_list.pose.orientation.w = 1.0;
+  line_list.id = 2;
+  line_list.type = visualization_msgs::Marker::LINE_LIST;
+  line_list.scale.x = 0.1;
+  line_list.color.r = 1.0;
+  line_list.color.a = 1.0;
+  line_list.header.frame_id = "camera_depth_frame";
+
+  geometry_msgs::Point p, po;
+  for(size_t idx = 0; idx < cloud_normals->size(); idx++)
+  {
+    p.x += cloud->points[idx].x + cloud_normals->points[idx].normal[0];
+    p.y += cloud->points[idx].y + cloud_normals->points[idx].normal[1];
+    p.z += cloud->points[idx].z + cloud_normals->points[idx].normal[2];
+
+    po.x += cloud->points[idx].x;
+    po.y += cloud->points[idx].y;
+    po.z += cloud->points[idx].z;
+  }
+
+  p.x /= cloud_normals->size();
+  p.y /= cloud_normals->size();
+  p.z /= cloud_normals->size();
+
+  po.x /= cloud_normals->size();
+  po.y /= cloud_normals->size();
+  po.z /= cloud_normals->size();
+
+  geometry_msgs::Point line_origin, line_end;
+  line_origin.x = po.z;
+  line_origin.y = -po.x;
+  line_origin.z = -po.y;
+
+  line_end.x = p.z;
+  line_end.y = -p.x;
+  line_end.z = -p.y;
+
+  line_list.points.push_back(line_origin);
+  line_list.points.push_back(line_end);
+  marker_pub_.publish(line_list);
+
+
+  tf::Quaternion q;
+  q.setValue(0, 0, 0, 1);
+
+  return {line_origin, q};
+
+}
+
+void MarkerTracker::publishTransform(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name)
+{
+  if (cloud->size() > 0)
+  {
+
+    struct marker_pose_t pose = getMarkerPose(cloud);
+
+    tf::Transform transform;
+    transform.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
+    transform.setRotation(pose.orientation);
+    transform_broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "camera_depth_frame", name));
+  }
+
 }
 
 void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
 {
+
   cv::Mat filtered, hsv;
   cvtColor(color_frame, hsv, CV_BGR2HSV);
 
@@ -87,7 +215,8 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
   }
 
 
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr red_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr blue_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
 
   float depth_scale_meters = device_->get_depth_scale();
   for (int v = 0; v < depth_intrinsic_.height; v++)
@@ -109,29 +238,50 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
         struct rs::float2 tex_coord = color_intrinsic_.project_to_texcoord(depth_extrinsic_.transform({depth_point[0],
                                                                                                       depth_point[1],
                                                                                                       depth_point[2]}));
-        if(getFromTexCoord(msg_img, tex_coord, color_intrinsic_))
+        if(getFromTexCoord(red_mask, tex_coord, color_intrinsic_))
         {
           pcl::PointXYZRGB point;
           point.x = depth_point[0];
           point.y = depth_point[1];
           point.z = depth_point[2];
+          point.r = 255;
 
-          cv::Vec3b pixel_vec = rgbFromTexCoord(color_frame, tex_coord, color_intrinsic_);
-          point.r = pixel_vec[0];
-          point.g = pixel_vec[1];
-          point.b = pixel_vec[2];
+          red_cloud_ptr->push_back(point);
+        }
+        else if(getFromTexCoord(blue_mask, tex_coord, color_intrinsic_))
+        {
+          pcl::PointXYZRGB point;
+          point.x = depth_point[0];
+          point.y = depth_point[1];
+          point.z = depth_point[2];
+          point.b = 255;
 
-          cloud_ptr->push_back(point);
+          blue_cloud_ptr->push_back(point);
         }
       }
     }
   }
 
+
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr debug_red_cloud_ptr = getBiggestCluster(red_cloud_ptr);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr debug_blue_cloud_ptr = getBiggestCluster(blue_cloud_ptr);
+
+  publishTransform(debug_blue_cloud_ptr, "blue_marker_frame");
+  publishTransform(debug_red_cloud_ptr, "red_marker_frame");
+
+
   sensor_msgs::PointCloud2 output;
+
   pcl::PCLPointCloud2 pcl_pc;
-  pcl::toPCLPointCloud2(*cloud_ptr, pcl_pc);
+  pcl::toPCLPointCloud2(*debug_red_cloud_ptr, pcl_pc);
   pcl_conversions::fromPCL(pcl_pc, output);
   output.header.frame_id = "camera_depth_optical_frame";
   output.header.stamp = ros::Time::now();
-  marker_cloud_pub_.publish(output);
+  red_marker_cloud_pub_.publish(output);
+
+  pcl::toPCLPointCloud2(*debug_blue_cloud_ptr, pcl_pc);
+  pcl_conversions::fromPCL(pcl_pc, output);
+  output.header.frame_id = "camera_depth_optical_frame";
+  output.header.stamp = ros::Time::now();
+  blue_marker_cloud_pub_.publish(output);
 };

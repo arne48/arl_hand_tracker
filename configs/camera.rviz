@@ -135,10 +135,10 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 1
+      Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /camera/points
+      Topic: /arl_marker_tracker/debug/blue_marker_cloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true

@@ -2,6 +2,7 @@
 #define ARL_HAND_TRACKER_MARKER_TRACKER_H
 
 #include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
 #include <librealsense/rs.hpp>
 #include <opencv2/core/core.hpp>
 #include <dynamic_reconfigure/server.h>
@@ -14,6 +15,13 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <arl_hand_tracker/constants.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/features/moment_of_inertia_estimation.h>
+#include <visualization_msgs/Marker.h>
 
 class MarkerTracker{
 public:
@@ -39,6 +47,11 @@ private:
     int blue_v_min;
   } current_filter_setting;
 
+  struct marker_pose_t {
+    geometry_msgs::Point position;
+    tf::Quaternion orientation;
+  };
+
   rs::device *device_;
   rs::intrinsics depth_intrinsic_;
   rs::intrinsics color_intrinsic_;
@@ -47,12 +60,17 @@ private:
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::Publisher image_pub_;
-  ros::Publisher marker_cloud_pub_;
+  ros::Publisher red_marker_cloud_pub_;
+  ros::Publisher blue_marker_cloud_pub_;
+  ros::Publisher marker_pub_;
+  tf::TransformBroadcaster transform_broadcaster_;
 
   dynamic_reconfigure::Server<arl_hand_tracker::MarkerFilterConfig> server;
   void filterCallback(arl_hand_tracker::MarkerFilterConfig &config, uint32_t level);
+  void publishTransform(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name);
+  struct marker_pose_t getMarkerPose(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
   uchar getFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics);
-  cv::Vec3b rgbFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr getBiggestCluster(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
 
 };
 
