@@ -9,6 +9,7 @@ int main(int argc, char** argv)
     ros::shutdown();
     return 0;
   }
+  zr300.publishMarkers_ = true;
   ros::spin();
   ROS_ERROR_STREAM("Disabling");
   zr300.disableRealsense();

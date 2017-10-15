@@ -36,6 +36,7 @@ public:
   ~RealsenseZR300();
 
   bool cameraStarted_;
+  bool publishMarkers_;
 
   void disableRealsense();
   void getParameters();

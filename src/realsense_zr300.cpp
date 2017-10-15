@@ -28,6 +28,8 @@ intialize_time_base_(false)
   unit_step_size_[rs::stream::fisheye] = sizeof(unsigned char); // sensor_msgs::ImagePtr row step size
   stream_name_[rs::stream::fisheye] = "fisheye";
 
+  publishMarkers_ = false;
+
   getParameters();
 
   if (!setupDevice())
@@ -209,7 +211,7 @@ void RealsenseZR300::registerVisualLambdaCallback(rs::stream stream)
   {
     image_[stream].data = (unsigned char *) frame.get_data();
 
-    if (stream == rs::stream::color)
+    if (stream == rs::stream::color && publishMarkers_)
     {
       tracker->publishMarker(image_[stream], image_[rs::stream::depth]);
     }

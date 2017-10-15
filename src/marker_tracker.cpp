@@ -51,7 +51,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr MarkerTracker::getBiggestCluster(pcl::Poi
   pcl::VoxelGrid<pcl::PointXYZRGB> vg;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZRGB>);
   vg.setInputCloud (cloud);
-  vg.setLeafSize (0.01f, 0.01f, 0.01f);
+  vg.setLeafSize (0.015f, 0.015f, 0.015f);
   vg.filter (*cloud_filtered);
 
 
