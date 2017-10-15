@@ -10,5 +10,7 @@ int main(int argc, char** argv)
     return 0;
   }
   ros::spin();
+  ROS_ERROR_STREAM("Disabling");
+  zr300.disableRealsense();
   return 0;
 }

@@ -42,9 +42,12 @@ intialize_time_base_(false)
 }
 
 RealsenseZR300::~RealsenseZR300()
+{}
+
+void RealsenseZR300::disableRealsense()
 {
   device_->stop(rs::source::all_sources);
-  usleep(250);
+  sleep(3);
   ctx_.reset();
   delete tracker;
 }
@@ -87,6 +90,9 @@ void RealsenseZR300::getParameters()
 bool RealsenseZR300::setupDevice()
 {
   ctx_.reset(new rs::context());
+
+  sleep(3);
+
   int num_of_cams = ctx_ -> get_device_count();
   if (num_of_cams == 0)
   {

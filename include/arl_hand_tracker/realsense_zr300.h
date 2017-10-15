@@ -37,6 +37,7 @@ public:
 
   bool cameraStarted_;
 
+  void disableRealsense();
   void getParameters();
   bool setupDevice();
   void setupPublishers();
