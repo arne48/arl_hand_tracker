@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(arl_hand_tracker)
 
 #list(APPEND CMAKE_MODULE_PATH "/home/user/libraries/")
-set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -Ofast -g -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -O2 -g -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
 
 find_package(catkin REQUIRED COMPONENTS
   message_generation
