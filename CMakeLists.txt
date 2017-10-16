@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 project(arl_hand_tracker)
 
 #list(APPEND CMAKE_MODULE_PATH "/home/user/libraries/")
-set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -O0 -g -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -Ofast -g -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
 
 find_package(catkin REQUIRED COMPONENTS
   message_generation
+  message_filters
+  arl_hw_msgs
   dynamic_reconfigure
   realsense_ros_camera
   roscpp
@@ -14,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   sensor_msgs
+  geometry_msgs
   visualization_msgs
   cv_bridge
   image_transport
@@ -29,6 +32,7 @@ add_message_files(
         FILES
         IMUInfo.msg
         Extrinsics.msg
+        TrainingData.msg
 )
 
 generate_dynamic_reconfigure_options(
@@ -39,6 +43,8 @@ generate_messages(
         DEPENDENCIES
         sensor_msgs
         std_msgs
+        arl_hw_msgs
+        geometry_msgs
 )
 
 catkin_package(

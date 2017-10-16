@@ -186,10 +186,10 @@ void MarkerTracker::publishTransform(pcl::PointCloud<pcl::PointXYZRGB>::Ptr clou
   {
 
     struct marker_pose_t pose = getMarkerPose(cloud);
-
     tf::Transform transform;
     transform.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
     transform.setRotation(pose.orientation);
+
     transform_broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "camera_depth_frame", name));
   }
 

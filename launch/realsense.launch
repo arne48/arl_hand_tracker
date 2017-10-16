@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="arl_hand_tracker" type="arl_marker_tracker_node" name="arl_marker_tracker_node" output="screen" launch-prefix="xterm -e gdb -ex run --args">
+  <node pkg="arl_hand_tracker" type="arl_marker_tracker_node" name="arl_marker_tracker_node" output="screen">
     <param name="fisheye_width"            type="int"  value="640" />
     <param name="fisheye_height"           type="int"  value="480" />
     <param name="enable_fisheye"           type="bool" value="true" />
