@@ -1,3 +1,6 @@
+// License: Apache 2.0. See LICENSE file in root directory.
+// Copyright(c) 2017 Intel Corporation. All Rights Reserved
+// modified by Arne
 #include <arl_hand_tracker/realsense_zr300.h>
 
 RealsenseZR300::RealsenseZR300() :
