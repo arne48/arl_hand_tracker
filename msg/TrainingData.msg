@@ -1,0 +1,4 @@
+std_msgs/Header header
+
+arl_hw_msgs/MusculatureState musculature_state
+geometry_msgs/PoseStamped hand_pose

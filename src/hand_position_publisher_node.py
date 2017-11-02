@@ -31,7 +31,7 @@ class Publisher:
         self._last_musculature_state = data
 
     def run(self):
-        raw_input("Press Enter when both markers are visible...")
+        # raw_input("Press Enter when both markers are visible...")
         self._tf_listener = tf.TransformListener()
 
         rate = rospy.Rate(100)
