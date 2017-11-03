@@ -9,7 +9,7 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
   color_intrinsic_ = device_->get_stream_intrinsics(rs::stream::color);
   depth_extrinsic_ = device_->get_extrinsics(rs::stream::depth, rs::stream::color);
 
-  dynamic_reconfigure::Server<arl_hand_tracker::MarkerFilterConfig>::CallbackType f;
+  dynamic_reconfigure::Server<arl_hand_tracker_msgs::MarkerFilterConfig>::CallbackType f;
 
   f = boost::bind(&MarkerTracker::filterCallback, this, _1, _2);
   server.setCallback(f);
@@ -26,7 +26,7 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
 MarkerTracker::~MarkerTracker()
 {};
 
-void MarkerTracker::filterCallback(arl_hand_tracker::MarkerFilterConfig &config, uint32_t level)
+void MarkerTracker::filterCallback(arl_hand_tracker_msgs::MarkerFilterConfig &config, uint32_t level)
 {
   current_filter_setting = {config.red_h_max, config.red_h_min, config.red_s_max, config.red_s_min,
                             config.red_v_max, config.red_v_min, config.blue_h_max, config.blue_h_min,

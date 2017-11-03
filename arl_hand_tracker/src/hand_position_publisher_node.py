@@ -9,7 +9,7 @@ import roslib
 import tf
 from geometry_msgs.msg import PoseStamped
 from arl_hw_msgs.msg import MusculatureState
-from arl_hand_tracker.msg import TrainingData
+from arl_hand_tracker_msgs.msg import TrainingData
 
 
 class Publisher:

@@ -6,7 +6,7 @@
 #include <librealsense/rs.hpp>
 #include <opencv2/core/core.hpp>
 #include <dynamic_reconfigure/server.h>
-#include <arl_hand_tracker/MarkerFilterConfig.h>
+#include <arl_hand_tracker_msgs/MarkerFilterConfig.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -65,8 +65,8 @@ private:
   ros::Publisher marker_pub_;
   tf::TransformBroadcaster transform_broadcaster_;
 
-  dynamic_reconfigure::Server<arl_hand_tracker::MarkerFilterConfig> server;
-  void filterCallback(arl_hand_tracker::MarkerFilterConfig &config, uint32_t level);
+  dynamic_reconfigure::Server<arl_hand_tracker_msgs::MarkerFilterConfig> server;
+  void filterCallback(arl_hand_tracker_msgs::MarkerFilterConfig &config, uint32_t level);
   void publishTransform(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name);
   struct marker_pose_t getMarkerPose(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
   uchar getFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics);

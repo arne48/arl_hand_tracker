@@ -24,8 +24,8 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <arl_hand_tracker/Extrinsics.h>
-#include <arl_hand_tracker/IMUInfo.h>
+#include <arl_hand_tracker_msgs/Extrinsics.h>
+#include <arl_hand_tracker_msgs/IMUInfo.h>
 #include <sensor_msgs/Imu.h>
 #include <tf/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -53,10 +53,10 @@ public:
   void publishStaticTransforms();
   float rgbFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics);
   void publishPCTopic(ros::Time t);
-  void getImuInfo(rs::device* device, arl_hand_tracker::IMUInfo &accelInfo, arl_hand_tracker::IMUInfo &gyroInfo);
-  arl_hand_tracker::Extrinsics rsExtrinsicsToMsg(rs::extrinsics rsExtrinsics);
-  arl_hand_tracker::Extrinsics getFisheye2ImuExtrinsicsMsg(rs::device* device);
-  arl_hand_tracker::Extrinsics getFisheye2DepthExtrinsicsMsg(rs::device* device);
+  void getImuInfo(rs::device* device, arl_hand_tracker_msgs::IMUInfo &accelInfo, arl_hand_tracker_msgs::IMUInfo &gyroInfo);
+  arl_hand_tracker_msgs::Extrinsics rsExtrinsicsToMsg(rs::extrinsics rsExtrinsics);
+  arl_hand_tracker_msgs::Extrinsics getFisheye2ImuExtrinsicsMsg(rs::device* device);
+  arl_hand_tracker_msgs::Extrinsics getFisheye2DepthExtrinsicsMsg(rs::device* device);
 
 private:
   ros::NodeHandle node_handle, pnh_;
