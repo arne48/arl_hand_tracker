@@ -177,11 +177,11 @@ void RealsenseZR300::setupPublishers()
   // Latched topics
   if (true == enable_[rs::stream::fisheye])
   {
-    fe2imu_publisher_ = node_handle.advertise<arl_hand_tracker::Extrinsics>("camera/extrinsics/fisheye2imu", 1, true);
-    fe2depth_publisher_ = node_handle.advertise<arl_hand_tracker::Extrinsics>("camera/extrinsics/fisheye2depth", 1, true);
+    fe2imu_publisher_ = node_handle.advertise<arl_hand_tracker_msgs::Extrinsics>("camera/extrinsics/fisheye2imu", 1, true);
+    fe2depth_publisher_ = node_handle.advertise<arl_hand_tracker_msgs::Extrinsics>("camera/extrinsics/fisheye2depth", 1, true);
   }
-  accelInfo_publisher_ = node_handle.advertise<arl_hand_tracker::IMUInfo>("camera/accel/imu_info", 1, true);
-  gyroInfo_publisher_ = node_handle.advertise<arl_hand_tracker::IMUInfo>("camera/gyro/imu_info", 1, true);
+  accelInfo_publisher_ = node_handle.advertise<arl_hand_tracker_msgs::IMUInfo>("camera/accel/imu_info", 1, true);
+  gyroInfo_publisher_ = node_handle.advertise<arl_hand_tracker_msgs::IMUInfo>("camera/gyro/imu_info", 1, true);
 
 }//end setupPublishers
 
@@ -384,7 +384,7 @@ void RealsenseZR300::setupStreams()
   ROS_INFO_STREAM("  enabled accel and gyro stream");
 
   // publish ZR300-specific intrinsics/extrinsics
-  arl_hand_tracker::IMUInfo accelInfo, gyroInfo;
+  arl_hand_tracker_msgs::IMUInfo accelInfo, gyroInfo;
   getImuInfo(device_, accelInfo, gyroInfo);
 
   fe2imu_publisher_.publish(getFisheye2ImuExtrinsicsMsg(device_));
@@ -671,7 +671,7 @@ void RealsenseZR300::publishPCTopic(ros::Time t)
   pointcloud_publisher_.publish(msg_pointcloud);
 }
 
-void RealsenseZR300::getImuInfo(rs::device* device, arl_hand_tracker::IMUInfo &accelInfo, arl_hand_tracker::IMUInfo &gyroInfo)
+void RealsenseZR300::getImuInfo(rs::device* device, arl_hand_tracker_msgs::IMUInfo &accelInfo, arl_hand_tracker_msgs::IMUInfo &gyroInfo)
 {
   rs::motion_intrinsics imuIntrinsics = device->get_motion_intrinsics();
 
@@ -702,9 +702,9 @@ void RealsenseZR300::getImuInfo(rs::device* device, arl_hand_tracker::IMUInfo &a
   }
 }
 
-arl_hand_tracker::Extrinsics RealsenseZR300::rsExtrinsicsToMsg(rs::extrinsics rsExtrinsics)
+arl_hand_tracker_msgs::Extrinsics RealsenseZR300::rsExtrinsicsToMsg(rs::extrinsics rsExtrinsics)
 {
-  arl_hand_tracker::Extrinsics extrinsicsMsg;
+  arl_hand_tracker_msgs::Extrinsics extrinsicsMsg;
 
   for (int i = 0; i < 9; ++i)
   {
@@ -715,16 +715,16 @@ arl_hand_tracker::Extrinsics RealsenseZR300::rsExtrinsicsToMsg(rs::extrinsics rs
   return extrinsicsMsg;
 }
 
-arl_hand_tracker::Extrinsics RealsenseZR300::getFisheye2ImuExtrinsicsMsg(rs::device* device)
+arl_hand_tracker_msgs::Extrinsics RealsenseZR300::getFisheye2ImuExtrinsicsMsg(rs::device* device)
 {
-  arl_hand_tracker::Extrinsics extrinsicsMsg = rsExtrinsicsToMsg(device->get_motion_extrinsics_from(rs::stream::fisheye));
+  arl_hand_tracker_msgs::Extrinsics extrinsicsMsg = rsExtrinsicsToMsg(device->get_motion_extrinsics_from(rs::stream::fisheye));
   extrinsicsMsg.header.frame_id = "fisheye2imu_extrinsics";
   return extrinsicsMsg;
 }
 
-arl_hand_tracker::Extrinsics RealsenseZR300::getFisheye2DepthExtrinsicsMsg(rs::device* device)
+arl_hand_tracker_msgs::Extrinsics RealsenseZR300::getFisheye2DepthExtrinsicsMsg(rs::device* device)
 {
-  arl_hand_tracker::Extrinsics extrinsicsMsg =  rsExtrinsicsToMsg(device->get_extrinsics(rs::stream::depth, rs::stream::fisheye));
+  arl_hand_tracker_msgs::Extrinsics extrinsicsMsg =  rsExtrinsicsToMsg(device->get_extrinsics(rs::stream::depth, rs::stream::fisheye));
   extrinsicsMsg.header.frame_id = "fisheye2depth_extrinsics";
   return extrinsicsMsg;
 }
