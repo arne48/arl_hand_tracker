@@ -17,10 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-find_package(PCL 1.7.2 EXACT REQUIRED)
-
-find_package(OpenCV 3 REQUIRED)
-
 add_message_files(
         FILES
         IMUInfo.msg
