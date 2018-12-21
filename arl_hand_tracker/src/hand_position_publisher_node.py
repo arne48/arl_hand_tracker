@@ -3,6 +3,7 @@ import os
 import copy
 import math
 import xmlrpclib
+import numpy as np
 
 import rospy
 import roslib
@@ -31,14 +32,28 @@ class Publisher:
         self._last_musculature_state = data
 
     def run(self):
-        # raw_input("Press Enter when both markers are visible...")
         self._tf_listener = tf.TransformListener()
 
         rate = rospy.Rate(100)
+        static_pose = None
+
         while not rospy.is_shutdown():
 
-            (pose_msg, success) = self._get_transform('/red_marker_frame', '/blue_marker_frame')
+            # get reference transform once
+            if static_pose is None:
+                (static_pose, success) = self._get_transform('/camera_depth_frame', '/red_marker_frame')
+                if not success:
+                    static_pose = None
+            else:
+                self._tf_broadcaster.sendTransform((static_pose.pose.position.x, static_pose.pose.position.y,
+                                                    static_pose.pose.position.z), (static_pose.pose.orientation.x,
+                                                                                   static_pose.pose.orientation.y,
+                                                                                   static_pose.pose.orientation.z,
+                                                                                   static_pose.pose.orientation.w),
+                                                   rospy.Time.now(), '/base_link', '/camera_depth_frame')
 
+            # publish training data
+            (pose_msg, success) = self._get_transform('/base_link', '/blue_marker_frame')
             if success:
                 self._hand_pose_publisher.publish(pose_msg)
 
