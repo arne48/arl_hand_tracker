@@ -53,7 +53,7 @@ class Publisher:
                                                    rospy.Time.now(), '/base_link', '/camera_depth_frame')
 
             # publish training data
-            (pose_msg, success) = self._get_transform('/base_link', '/blue_marker_frame')
+            (pose_msg, success) = self._get_transform('/base_link', '/yellow_marker_frame')
             if success:
                 self._hand_pose_publisher.publish(pose_msg)
 
