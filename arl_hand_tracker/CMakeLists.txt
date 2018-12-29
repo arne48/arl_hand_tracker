@@ -21,11 +21,11 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   cv_bridge
   image_transport
-# librealsense
+  librealsense
   tf
 )
 
-find_package(PCL 1.7.2 EXACT REQUIRED)
+find_package(PCL 1.8.1 EXACT REQUIRED)
 
 find_package(OpenCV 3 REQUIRED)
 

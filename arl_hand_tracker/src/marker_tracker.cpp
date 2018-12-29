@@ -15,11 +15,13 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
   server.setCallback(f);
 
   current_filter_setting = {255, 0, 255, 0, 255, 0,
+                            255, 0, 255, 0, 255, 0,
                             255, 0, 255, 0, 255, 0};
 
   image_pub_ = it_.advertise("/arl_marker_tracker/debug/filtered_image", 1);
   red_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/red_marker_cloud", 1);
   blue_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/blue_marker_cloud", 1);
+  yellow_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/yellow_marker_cloud", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 };
 
@@ -30,7 +32,9 @@ void MarkerTracker::filterCallback(arl_hand_tracker_msgs::MarkerFilterConfig &co
 {
   current_filter_setting = {config.red_h_max, config.red_h_min, config.red_s_max, config.red_s_min,
                             config.red_v_max, config.red_v_min, config.blue_h_max, config.blue_h_min,
-                            config.blue_s_max, config.blue_s_min, config.blue_v_max, config.blue_v_min};
+                            config.blue_s_max, config.blue_s_min, config.blue_v_max, config.blue_v_min,
+                            config.yellow_h_max, config.yellow_h_min, config.yellow_s_max, config.yellow_s_min,
+                            config.yellow_v_max, config.yellow_v_min};
 }
 
 uchar MarkerTracker::getFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics)
@@ -51,7 +55,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr MarkerTracker::getBiggestCluster(pcl::Poi
   pcl::VoxelGrid<pcl::PointXYZRGB> vg;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZRGB>);
   vg.setInputCloud (cloud);
-  vg.setLeafSize (0.015f, 0.015f, 0.015f);
+  vg.setLeafSize (0.01f, 0.01f, 0.01f);
   vg.filter (*cloud_filtered);
 
 
@@ -61,8 +65,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr MarkerTracker::getBiggestCluster(pcl::Poi
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-  ec.setClusterTolerance (0.02);
-  ec.setMinClusterSize (100);
+  ec.setClusterTolerance (0.04);
+  ec.setMinClusterSize (50);
   ec.setMaxClusterSize (25000);
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud_filtered);
@@ -205,18 +209,21 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
   cv::Mat filtered, hsv;
   cvtColor(color_frame, hsv, CV_BGR2HSV);
 
-  cv::Mat red_mask, blue_mask, combined_mask;
+  cv::Mat red_mask, blue_mask, yellow_mask, combined_mask;
   inRange(hsv, cv::Scalar(current_filter_setting.red_h_min, current_filter_setting.red_s_min, current_filter_setting.red_v_min),
           cv::Scalar(current_filter_setting.red_h_max, current_filter_setting.red_s_max, current_filter_setting.red_v_max), red_mask);
 
   inRange(hsv, cv::Scalar(current_filter_setting.blue_h_min, current_filter_setting.blue_s_min, current_filter_setting.blue_v_min),
           cv::Scalar(current_filter_setting.blue_h_max, current_filter_setting.blue_s_max, current_filter_setting.blue_v_max), blue_mask);
 
+  inRange(hsv, cv::Scalar(current_filter_setting.yellow_h_min, current_filter_setting.yellow_s_min, current_filter_setting.yellow_v_min),
+          cv::Scalar(current_filter_setting.yellow_h_max, current_filter_setting.yellow_s_max, current_filter_setting.yellow_v_max), yellow_mask);
+
 
   if (image_pub_.getNumSubscribers())
   {
     cv::Mat msg_img;
-    msg_img = blue_mask + red_mask;
+    msg_img = blue_mask + red_mask + yellow_mask;
     sensor_msgs::ImagePtr img;
     img = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::MONO8, msg_img).toImageMsg();
     img->width = (uint32_t)msg_img.cols;
@@ -232,6 +239,7 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
 
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr red_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr blue_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr yellow_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
 
   float depth_scale_meters = device_->get_depth_scale();
   for (int v = 0; v < depth_intrinsic_.height; v++)
@@ -273,6 +281,16 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
 
           blue_cloud_ptr->push_back(point);
         }
+        else if(getFromTexCoord(yellow_mask, tex_coord, color_intrinsic_))
+        {
+          pcl::PointXYZRGB point;
+          point.x = depth_point[0];
+          point.y = depth_point[1];
+          point.z = depth_point[2];
+          point.b = 255;
+
+          yellow_cloud_ptr->push_back(point);
+        }
       }
     }
   }
@@ -280,6 +298,7 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
 
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr red_marker_cloud_ptr = getBiggestCluster(red_cloud_ptr);
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr blue_marker_cloud_ptr = getBiggestCluster(blue_cloud_ptr);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr yellow_marker_cloud_ptr = getBiggestCluster(yellow_cloud_ptr);
 
 
   if (red_marker_cloud_pub_.getNumSubscribers())
@@ -304,6 +323,18 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
     blue_marker_cloud_pub_.publish(output);
   }
 
+  if (yellow_marker_cloud_pub_.getNumSubscribers())
+  {
+    sensor_msgs::PointCloud2 output;
+    pcl::PCLPointCloud2 pcl_pc;
+    pcl::toPCLPointCloud2(*yellow_marker_cloud_ptr, pcl_pc);
+    pcl_conversions::fromPCL(pcl_pc, output);
+    output.header.frame_id = "camera_depth_optical_frame";
+    output.header.stamp = ros::Time::now();
+    yellow_marker_cloud_pub_.publish(output);
+  }
+
   publishTransform(blue_marker_cloud_ptr, "blue_marker_frame");
   publishTransform(red_marker_cloud_ptr, "red_marker_frame");
+  publishTransform(yellow_marker_cloud_ptr, "yellow_marker_frame");
 };

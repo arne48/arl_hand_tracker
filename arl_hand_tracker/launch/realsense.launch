@@ -1,5 +1,8 @@
 <launch>
-  <node pkg="arl_hand_tracker" type="arl_marker_tracker_node" name="arl_marker_tracker_node" output="screen">
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find realsense_ros_camera)/urdf/test_zr300_camera.urdf.xacro'" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <node pkg="arl_hand_tracker" type="arl_marker_tracker_node" name="arl_marker_tracker_node" output="screen" respawn="true">
     <param name="fisheye_width"            type="int"  value="640" />
     <param name="fisheye_height"           type="int"  value="480" />
     <param name="enable_fisheye"           type="bool" value="true" />
