@@ -14,10 +14,22 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
   f = boost::bind(&MarkerTracker::filterCallback, this, _1, _2);
   server.setCallback(f);
 
-  current_filter_setting = {255, 0, 255, 0, 255, 0,
-                            255, 0, 255, 0, 255, 0,
-                            255, 0, 255, 0, 255, 0,
-                            255, 0, 255, 0, 255, 0};
+  current_filter_setting = {.red_h_max = 255, .red_h_min = 0,
+                            .red_s_max = 255, .red_s_min = 0,
+                            .red_v_max = 255, .red_v_min = 0,
+
+                            .blue_h_max = 255, .blue_h_min = 0,
+                            .blue_s_max = 255, .blue_s_min = 0,
+                            .blue_v_max = 255, .blue_v_min = 0,
+
+                            .yellow_h_max = 255, .yellow_h_min = 0,
+                            .yellow_s_max = 255, .yellow_s_min = 0,
+                            .yellow_v_max = 255, .yellow_v_min = 0,
+
+                            .green_h_max = 255, .green_h_min = 0,
+                            .green_s_max = 255, .green_s_min = 0,
+                            .green_v_max = 255, .green_v_min = 0
+                          };
 
   image_pub_ = it_.advertise("/arl_marker_tracker/debug/filtered_image", 1);
   red_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/red_marker_cloud", 1);
@@ -32,14 +44,22 @@ MarkerTracker::~MarkerTracker()
 
 void MarkerTracker::filterCallback(arl_hand_tracker_msgs::MarkerFilterConfig &config, uint32_t level)
 {
-  current_filter_setting = {config.red_h_max, config.red_h_min, config.red_s_max, config.red_s_min,
-                            config.red_v_max, config.red_v_min,
-                            config.blue_h_max, config.blue_h_min, config.blue_s_max, config.blue_s_min,
-                            config.blue_v_max, config.blue_v_min,
-                            config.yellow_h_max, config.yellow_h_min, config.yellow_s_max, config.yellow_s_min,
-                            config.yellow_v_max, config.yellow_v_min,
-                            config.green_h_max, config.green_h_min, config.green_s_max, config.green_s_min,
-                            config.green_v_max, config.green_v_min};
+  current_filter_setting = {.red_h_max = config.red_h_max, .red_h_min = config.red_h_min,
+                            .red_s_max = config.red_s_max, .red_s_min = config.red_s_min,
+                            .red_v_max = config.red_v_max, .red_v_min = config.red_v_min,
+
+                            .blue_h_max = config.blue_h_max, .blue_h_min = config.blue_h_min,
+                            .blue_s_max = config.blue_s_max, .blue_s_min = config.blue_s_min,
+                            .blue_v_max = config.blue_v_max, .blue_v_min = config.blue_v_min,
+
+                            .yellow_h_max = config.yellow_h_max, .yellow_h_min = config.yellow_h_min,
+                            .yellow_s_max = config.yellow_s_max, .yellow_s_min = config.yellow_s_min,
+                            .yellow_v_max = config.yellow_v_max, .yellow_v_min = config.yellow_v_min,
+
+                            .green_h_max = config.green_h_max, .green_h_min = config.green_h_min,
+                            .green_s_max = config.green_s_max, .green_s_min = config.green_s_min,
+                            .green_v_max = config.green_v_max, .green_v_min = config.green_v_min
+                          };
 }
 
 uchar MarkerTracker::getFromTexCoord(cv::Mat tex, struct rs::float2 coord, rs::intrinsics tex_intrinsics)
@@ -62,7 +82,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr MarkerTracker::getBiggestCluster(pcl::Poi
   vg.setInputCloud (cloud);
   vg.setLeafSize (0.01f, 0.01f, 0.01f);
   vg.filter (*cloud_filtered);
-
 
 
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);

@@ -57,8 +57,8 @@ private:
     int green_h_min;
     int green_s_max;
     int green_s_min;
-    int green_v_min;
     int green_v_max;
+    int green_v_min;
   } current_filter_setting;
 
   struct marker_pose_t {
