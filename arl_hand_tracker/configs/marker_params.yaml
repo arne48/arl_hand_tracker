@@ -6,6 +6,12 @@ dictitems:
   blue_s_min: 204
   blue_v_max: 200
   blue_v_min: 45
+  green_h_max: 63
+  green_h_min: 46
+  green_s_max: 192
+  green_s_min: 84
+  green_v_max: 206
+  green_v_min: 66
   groups: !!python/object/new:dynamic_reconfigure.encoding.Config
     dictitems:
       blue_h_max: 31
@@ -14,6 +20,12 @@ dictitems:
       blue_s_min: 204
       blue_v_max: 200
       blue_v_min: 45
+      green_h_max: 63
+      green_h_min: 46
+      green_s_max: 192
+      green_s_min: 84
+      green_v_max: 206
+      green_v_min: 66
       groups: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
       id: 0
@@ -29,12 +41,12 @@ dictitems:
       red_v_min: 108
       state: true
       type: ''
-      yellow_h_max: 92
-      yellow_h_min: 43
+      yellow_h_max: 94
+      yellow_h_min: 80
       yellow_s_max: 254
       yellow_s_min: 64
       yellow_v_max: 255
-      yellow_v_min: 127
+      yellow_v_min: 115
     state: []
   red_h_max: 131
   red_h_min: 119
@@ -42,10 +54,10 @@ dictitems:
   red_s_min: 119
   red_v_max: 255
   red_v_min: 108
-  yellow_h_max: 92
-  yellow_h_min: 43
+  yellow_h_max: 94
+  yellow_h_min: 80
   yellow_s_max: 254
   yellow_s_min: 64
   yellow_v_max: 255
-  yellow_v_min: 127
+  yellow_v_min: 115
 state: []
