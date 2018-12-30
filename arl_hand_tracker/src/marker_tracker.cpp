@@ -23,6 +23,7 @@ MarkerTracker::MarkerTracker(rs::device *device, ros::NodeHandle nh)
   red_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/red_marker_cloud", 1);
   blue_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/blue_marker_cloud", 1);
   yellow_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/yellow_marker_cloud", 1);
+  green_marker_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("/arl_marker_tracker/debug/green_marker_cloud", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 };
 
@@ -224,7 +225,7 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
           cv::Scalar(current_filter_setting.yellow_h_max, current_filter_setting.yellow_s_max, current_filter_setting.yellow_v_max), yellow_mask);
 
   inRange(hsv, cv::Scalar(current_filter_setting.green_h_min, current_filter_setting.green_s_min, current_filter_setting.green_v_min),
-          cv::Scalar(current_filter_setting.green_h_max, current_filter_setting.green_s_max, current_filter_setting.green_v_max), green_mask)
+          cv::Scalar(current_filter_setting.green_h_max, current_filter_setting.green_s_max, current_filter_setting.green_v_max), green_mask);
 
 
   if (image_pub_.getNumSubscribers())
@@ -354,7 +355,7 @@ void MarkerTracker::publishMarker(cv::Mat color_frame, cv::Mat depth_frame)
     yellow_marker_cloud_pub_.publish(output);
   }
 
-  if (yellow_green_cloud_pub_.getNumSubscribers())
+  if (green_marker_cloud_pub_.getNumSubscribers())
   {
     sensor_msgs::PointCloud2 output;
     pcl::PCLPointCloud2 pcl_pc;
