@@ -53,15 +53,25 @@ class Publisher:
                                                    rospy.Time.now(), '/base_link', '/camera_depth_frame')
 
             # publish training data
+            data = TrainingData()
+            data.header.stamp = rospy.get_rostime()
+            data.header.frame_id = '0'
+            data.musculature_state = self._last_musculature_state
+
             (pose_msg, success) = self._get_transform('/base_link', '/yellow_marker_frame')
             if success:
                 self._hand_pose_publisher.publish(pose_msg)
-
-                data = TrainingData()
-                data.header.stamp = rospy.get_rostime()
-                data.header.frame_id = '0'
-                data.musculature_state = self._last_musculature_state
                 data.hand_pose = pose_msg
+                self._training_data_publisher.publish(data)
+
+            (pose_msg, success) = self._get_transform('/base_link', '/blue_marker_frame')
+            if success:
+                data.elbow_pose = pose_msg
+                self._training_data_publisher.publish(data)
+
+            (pose_msg, success) = self._get_transform('/base_link', '/green_marker_frame')
+            if success:
+                data.shoulder_pose = pose_msg
                 self._training_data_publisher.publish(data)
 
             rate.sleep()

@@ -52,6 +52,13 @@ private:
     int yellow_s_min;
     int yellow_v_max;
     int yellow_v_min;
+
+    int green_h_max;
+    int green_h_min;
+    int green_s_max;
+    int green_s_min;
+    int green_v_min;
+    int green_v_max;
   } current_filter_setting;
 
   struct marker_pose_t {
@@ -70,6 +77,7 @@ private:
   ros::Publisher red_marker_cloud_pub_;
   ros::Publisher blue_marker_cloud_pub_;
   ros::Publisher yellow_marker_cloud_pub_;
+  ros::Publisher green_marker_cloud_pub_;
   ros::Publisher marker_pub_;
   tf::TransformBroadcaster transform_broadcaster_;
 
